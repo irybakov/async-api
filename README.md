@@ -1,2 +1,4 @@
 # async-api
-Sample of Async API MicroService
+Sample of Async API MicroService.
+
+Part of Ifrastracture prototype.
