@@ -1,0 +1,176 @@
+            
+swagger: '2.0'
+info:
+  title: Parking API
+  description: Welcome to Parking API
+  version: 1.0.0
+host: 127.0.0.1:8082
+schemes:
+  - https
+basePath: /v1
+produces:
+  - application/json
+paths:
+  /slots:
+    get:
+      summary: Parking Slots
+      description: |
+        The Slots endpoint returns information about *Parking slots*
+      tags:
+        - Slots
+      responses:
+        '200':
+          description: An array of slots
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Slot'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+            
+            
+    post:
+      summary: Parking Slots
+      description: |
+        The Slots endpoint to create new *Parking slot*
+      parameters:
+        - name: slot
+          in: body
+          description: Slot stucture.
+          required: true
+          schema:
+            $ref: '#/definitions/Slot'
+
+      tags:
+        - Slots
+      responses:
+        '200':
+          description: one slot
+          
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'        
+      
+
+  /slots/{slotId}:
+    get:
+      summary: Parking Slots
+      description: |
+        The Slots endpoint returns information about the *Parking slot*
+      parameters:
+        - name: slotId
+          in: path
+          description: Slot identifier.
+          required: true
+          type: number
+          format: srting
+      tags:
+        - Slots
+      responses:
+        '200':
+          description: one slot
+          schema:
+            type: object
+            $ref: '#/definitions/Slot'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    
+    put:
+      summary: Parking Slots
+      description: |
+        The Slots endpoint to update*Parking slot*
+      parameters:
+        - name: slotId
+          in: path
+          description: Slot identifier.
+          required: true
+          type: number
+          format: string
+          
+        - name: slot
+          in: body
+          description: Slot stucture.
+          required: true
+          schema:
+            $ref: '#/definitions/Slot'
+
+      tags:
+        - Slots
+      responses:
+        '200':
+          description: slot is updtated
+          
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  
+  /slots/{slotId}/{state}:  
+    put:
+      summary: Update slot sate
+      description: update slot state
+      parameters:
+        - name: slotId
+          in: path
+          description: Slot identifier.
+          required: true
+          type: number
+          format: string
+          
+        - name: state
+          in: path
+          required: true
+          type: number
+          enum: [1,0]
+          default: 0
+          description: Slot stucture.
+
+      tags:
+        - Slots
+      responses:
+        200:
+          description: OK
+    
+
+definitions:
+  Slot:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Slot identifier.
+      state:
+        type: number
+        enum: [1,0]
+        default: 0
+        description:  State of parking slot.
+      latitude:
+        type: string
+        description: Slot latitude.
+      longitude:
+        type: string
+        description: Slot longitude.
+
+  Error:
+    type: object
+    properties:
+      status:
+        type: integer
+        format: int32
+      series:
+        type: integer
+        format: int32
+      code:
+        type: integer
+        format: int64
+      message:
+        type: string
+      developerMessage:
+        type: string
+      moreInfo:
+        type: string
