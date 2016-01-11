@@ -12,7 +12,7 @@ import spray.testkit.ScalatestRouteTest
 /**
  * Created by irybakov on 1/9/16.
  */
-class AsyncApiSpec extends FlatSpec with ScalatestRouteTest with Matchers {
+class PingPongRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers {
 
   val pingService = TestProbe()
 
