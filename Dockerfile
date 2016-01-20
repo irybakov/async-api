@@ -5,7 +5,7 @@
 #
 
 # Pull base image OpenJDK
-FROM java:8
+FROM irybakov/sbt:latest
 
 MAINTAINER Igor Rybakov <igor@rybakov.kz>
 
