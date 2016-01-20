@@ -20,7 +20,9 @@ libraryDependencies ++= Seq(
   "io.spray" %% "spray-can" % sprayVersion,
   "io.spray" %% "spray-routing" % sprayVersion,
   "org.json4s" %% "json4s-native" % json4sVersion,
-  "com.aerospike" % "aerospike-client" % aerospike)
+  "com.rabbitmq"      %   "amqp-client"       % "3.5.3",
+  "com.github.sstone" %   "amqp-client_2.11"  % "1.5"
+)
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",

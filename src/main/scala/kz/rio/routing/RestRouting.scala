@@ -1,20 +1,31 @@
 package kz.rio.routing
 
-import akka.actor.{Props, Actor}
-import kz.rio.core.EchoActor.Echo
-import kz.rio.core.{EchoActor, PingActor}
-import kz.rio.core.PingActor.Ping
+import java.util.concurrent.TimeUnit
+
+import akka.actor.{ActorRef, Props, Actor}
+import akka.util.Timeout
+import kz.rio.core.{PingEchoActor}
 import kz.rio._
 import org.json4s.NoTypeHints
 import org.json4s.native.JsonMethods._
 import org.json4s.native.Serialization
-import spray.routing.{Route, HttpService}
+import spray.routing.{RequestContext, Route, HttpService}
 
 
-class RestRouting extends HttpService with Actor with PerRequestCreator{
+object RestRouting {
+
+  def props(): Props =  Props(classOf[RestRouting])
+
+}
+
+class RestRouting() extends HttpService with Actor with PerRequestCreator {
 
   implicit def actorRefFactory = context
   implicit val formats = Serialization.formats(NoTypeHints)
+
+  implicit val timeout = new Timeout(30, TimeUnit.SECONDS)
+
+  var lastId = 0L
 
   def receive = runRoute(route)
 
@@ -22,7 +33,7 @@ class RestRouting extends HttpService with Actor with PerRequestCreator{
     post {
       path("ping") {
         entity(as[String]) { body =>
-          handlePing {
+          handleRequest {
             val ping = parse(body).extract[Ping]
             ping
           }
@@ -30,20 +41,23 @@ class RestRouting extends HttpService with Actor with PerRequestCreator{
       } ~
       path("echo") {
         entity(as[String]) { body =>
-          handleEcho {
+          handleRequest {
             val echo = parse(body).extract[Echo]
             echo
           }
         }
       }
     }
-
   }
 
-  def handlePing(message : RestMessage): Route =
-    ctx => perRequest(ctx, Props(new PingActor()), message)
+  def handleRequest(message : DomainMessage): Route = {
+    val uuid = getLastId.toString
+    ctx => perRequest(ctx, Props(new PingEchoActor(uuid)), message, Some(uuid))
+  }
 
-  def handleEcho(message : RestMessage): Route =
-    ctx => perRequest(ctx, Props(new EchoActor()), message)
-
+  def getLastId : Long = {
+    if(lastId >= Long.MaxValue) lastId = 0L
+    lastId = lastId + 1
+    lastId
+  }
 }

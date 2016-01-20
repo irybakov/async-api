@@ -1,7 +1,6 @@
 
 import akka.testkit.{TestActorRef, TestProbe}
 import kz.rio._
-import kz.rio.core.{EchoActor, PingActor}
 import kz.rio.routing._
 import org.scalatest.{FlatSpec, Matchers}
 import spray.http._
@@ -18,7 +17,7 @@ class EchoRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers {
 
   def restRouting = TestActorRef(new RestRouting() {
 
-    override def handleEcho(message : RestMessage): Route =
+    override def handleRequest(message : DomainMessage): Route =
       ctx => perRequest(ctx, echoService.ref, message)
   })
 
@@ -30,8 +29,8 @@ class EchoRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers {
       )
     ) ~> restRouting.underlyingActor.route
 
-    echoService.expectMsg(EchoActor.Echo("test"))
-    echoService.reply(EchoActor.EchoResponse("test echo"))
+    echoService.expectMsg(Echo("test"))
+    echoService.reply(Echo("test echo"))
 
     postEcho ~> check {
       responseAs[String] should equal("""{"echo":"test echo"}""")

@@ -1,8 +1,10 @@
 package kz.rio
 
-// Common Messages
+trait DomainMessage
 
-trait RestMessage
+case class Ping(ping: String) extends DomainMessage
+case class Pong(pong: String) extends DomainMessage
+case class Echo(echo: String) extends DomainMessage
 
 case class Error(message: String)
 

@@ -1,7 +1,6 @@
 
 import akka.testkit.{TestActorRef, TestProbe}
 import kz.rio._
-import kz.rio.core.PingActor
 import kz.rio.routing._
 import org.scalatest.{Matchers, FlatSpec}
 import spray.http._
@@ -18,7 +17,7 @@ class PingPongRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers {
 
   def restRouting = TestActorRef(new RestRouting() {
 
-    override def handlePing(message : RestMessage): Route =
+    override def handleRequest(message : DomainMessage): Route =
       ctx => perRequest(ctx, pingService.ref, message)
   })
 
@@ -30,8 +29,8 @@ class PingPongRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers {
       )
     ) ~> restRouting.underlyingActor.route
 
-    pingService.expectMsg(PingActor.Ping("test"))
-    pingService.reply(PingActor.Pong("test"))
+    pingService.expectMsg(Ping("test"))
+    pingService.reply(Pong("test"))
 
     postPing ~> check {
       responseAs[String] should equal("""{"pong":"test"}""")
