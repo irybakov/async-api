@@ -25,7 +25,7 @@ class PingPongRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers {
     val postPing = Post("/ping",
       HttpEntity(
           MediaTypes.`application/json`,
-          """{"message":"test"}"""
+          """{"ping":"test"}"""
       )
     ) ~> restRouting.underlyingActor.route
 

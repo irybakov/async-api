@@ -25,7 +25,7 @@ class EchoRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers {
     val postEcho = Post("/echo",
       HttpEntity(
           MediaTypes.`application/json`,
-          """{"message":"test"}"""
+          """{"echo":"test"}"""
       )
     ) ~> restRouting.underlyingActor.route
 
