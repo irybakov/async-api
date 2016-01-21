@@ -1,11 +1,10 @@
 #
 # Scala and sbt Dockerfile
 #
-# https://github.com/hseeberger/scala-sbt
 #
 
 # Pull base image OpenJDK
-FROM irybakov/sbt:latest
+FROM java:8
 
 MAINTAINER Igor Rybakov <igor@rybakov.kz>
 
@@ -25,6 +24,10 @@ WORKDIR /root
 COPY ./target/universal/$APP_NAME /root/
 RUN unzip -q $APP_NAME
 WORKDIR /root/$APP_DIR/bin
+
+# clean zip
+RUN rm /root/$APP_NAME
+
 CMD chmod +x $RUN_SCRIPT
 EXPOSE 8082
 CMD ./$RUN_SCRIPT -Dconfig.resource=/application.conf
