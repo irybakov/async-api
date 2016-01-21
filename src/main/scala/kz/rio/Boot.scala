@@ -21,12 +21,13 @@ object Boot extends App {
   val amqpConnection = getAmqpConnection(config)
   val apiId = config.getString("api.instance.id")
   println(apiId)
+  val replyTo =s"$apiId.reply.queue"
 
   // Create amqp publisher Actor. We will access it via selector
-  system.actorOf(RequestPublisherActor.props(amqpConnection),name = "amqpPublisher")
+  system.actorOf(RequestPublisherActor.props(amqpConnection,replyTo),name = "amqpPublisher")
 
   // This Actor will listen for response
-  system.actorOf(ListenerActor.props(amqpConnection),name = "amqpListener")
+  system.actorOf(ListenerActor.props(amqpConnection,replyTo),name = "amqpListener")
 
   system.registerOnTermination {
     system.log.info("Actor per request demo shutdown.")

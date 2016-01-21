@@ -20,12 +20,12 @@ object RequestPublisherActor {
 
   case class PublishToQueue(correlationId: String, dm: DomainMessage)
 
-  def props(amqpConnection: ActorRef): Props =  Props(classOf[RequestPublisherActor],amqpConnection)
+  def props(amqpConnection: ActorRef,replyTo: String): Props =  Props(classOf[RequestPublisherActor],amqpConnection,replyTo)
 
 
 }
 
-class RequestPublisherActor(amqpConnection: ActorRef) extends Actor with ActorLogging {
+class RequestPublisherActor(amqpConnection: ActorRef,replyTo: String) extends Actor with ActorLogging {
 
   import context._
   implicit val formats = Serialization.formats(ShortTypeHints(List(classOf[Ping],classOf[Echo])))
@@ -34,12 +34,12 @@ class RequestPublisherActor(amqpConnection: ActorRef) extends Actor with ActorLo
   Amqp.waitForConnection(system, amqpConnection, producer).await(5, TimeUnit.SECONDS)
 
   override def receive: Receive = {
-    case p @ PublishToQueue(correlationId,dm)  => publish(write[DomainMessage](p.dm),p.correlationId,"")
+    case p @ PublishToQueue(correlationId,dm)  => publish(write[DomainMessage](p.dm),p.correlationId,replyTo)
   }
 
-  def publish (body: String, correlationId: String, replayTo: String)= {
+  def publish (body: String, correlationId: String, replyTo: String)= {
 
-    val props = new BasicProperties(null,null,null,1,null,correlationId,null,null,null,null,null,null,null,null)
+    val props = new BasicProperties(null,null,null,1,null,correlationId,replyTo,null,null,null,null,null,null,null)
     producer ! Publish("", "request.queue", body.getBytes(), properties = Some(props), mandatory = true, immediate = false)
     log.info("Publeshed {}", body)
   }

@@ -12,17 +12,17 @@ import org.json4s.native.Serialization
  * Created by irybakov on 1/12/16.
  */
 object ListenerActor {
-  def props(amqpConnection: ActorRef): Props =  Props(classOf[ListenerActor],amqpConnection)
+  def props(amqpConnection: ActorRef,replyTo: String): Props =  Props(classOf[ListenerActor],amqpConnection,replyTo)
 }
 
-class ListenerActor(amqpConnection: ActorRef) extends Actor with ActorLogging {
+class ListenerActor(amqpConnection: ActorRef, replyTo: String) extends Actor with ActorLogging {
 
   import context._
 
   implicit val formats = Serialization.formats(ShortTypeHints(List(classOf[Pong],classOf[Echo])))
 
   // create a consumer that will route incoming AMQP messages to our listener
-  val queueParams = QueueParameters("replay.queue", passive = false, durable = false, exclusive = false, autodelete = false)
+  val queueParams = QueueParameters(replyTo, passive = false, durable = false, exclusive = false, autodelete = false)
   val consumer = ConnectionOwner.createChildActor(amqpConnection, Consumer.props(Some(self)))
 
   // wait till everyone is actually connected to the broker
@@ -31,7 +31,7 @@ class ListenerActor(amqpConnection: ActorRef) extends Actor with ActorLogging {
 
   consumer ! DeclareQueue(queueParams)
 
-  consumer ! QueueBind(queue = "replay.queue", exchange = "amq.topic", routing_key = "*.replay")
+  consumer ! QueueBind(queue = replyTo, exchange = "amq.topic", routing_key = replyTo)
 
   // tell our consumer to consume from it
   consumer ! AddQueue(queueParams)
