@@ -17,23 +17,43 @@ class PingPongRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers {
 
   def restRouting = TestActorRef(new RestRouting() {
 
-    override def handleRequest(message : DomainMessage): Route =
+    override def handleRequest(message: DomainMessage): Route = {
+      ctx => perRequest(ctx, pingService.ref, message)
+    }
+
+    override def handleLocalRequest(message : DomainMessage): Route =
       ctx => perRequest(ctx, pingService.ref, message)
   })
 
-  "Post to RestRouting" should " return pong json" in {
-    val postPing = Post("/ping",
+  "Post to container RestRouting" should " return pong json" in {
+    val postPing = Post("/container/ping",
       HttpEntity(
           MediaTypes.`application/json`,
-          """{"ping":"test"}"""
+          """{"ping":"container"}"""
       )
     ) ~> restRouting.underlyingActor.route
 
-    pingService.expectMsg(Ping("test"))
-    pingService.reply(Pong("test"))
+    pingService.expectMsg(Ping("container"))
+    pingService.reply(Pong("container"))
 
     postPing ~> check {
-      responseAs[String] should equal("""{"pong":"test"}""")
+      responseAs[String] should equal("""{"pong":"container"}""")
+    }
+  }
+
+  "Post to api RestRouting" should " return pong json" in {
+    val postPing = Post("/api/ping",
+      HttpEntity(
+        MediaTypes.`application/json`,
+        """{"ping":"api"}"""
+      )
+    ) ~> restRouting.underlyingActor.route
+
+    pingService.expectMsg(Ping("api"))
+    pingService.reply(Pong("api"))
+
+    postPing ~> check {
+      responseAs[String] should equal("""{"pong":"api"}""")
     }
   }
 }

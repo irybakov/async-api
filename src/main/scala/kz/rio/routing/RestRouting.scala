@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorRef, Props, Actor}
 import akka.util.Timeout
-import kz.rio.core.{PingEchoActor}
+import kz.rio.core.{LocalPingEchoActor, PingEchoActor}
 import kz.rio._
 import org.json4s.NoTypeHints
 import org.json4s.native.JsonMethods._
@@ -30,29 +30,57 @@ class RestRouting() extends HttpService with Actor with PerRequestCreator {
   def receive = runRoute(route)
 
   val route = {
-    post {
-      path("ping") {
-        entity(as[String]) { body =>
-          handleRequest {
-            val ping = parse(body).extract[Ping]
-            ping
+    pathPrefix("container") {
+      post {
+        path("ping") {
+          entity(as[String]) { body =>
+            handleLocalRequest {
+              val ping = parse(body).extract[Ping]
+              ping
+            }
+          }
+        } ~
+        path("echo") {
+          entity(as[String]) { body =>
+            handleLocalRequest {
+              val echo = parse(body).extract[Echo]
+              echo
+            }
           }
         }
-      } ~
-      path("echo") {
-        entity(as[String]) { body =>
-          handleRequest {
-            val echo = parse(body).extract[Echo]
-            echo
+      }
+    } ~
+    pathPrefix("api") {
+      post {
+        path("ping") {
+          entity(as[String]) { body =>
+            handleRequest {
+              val ping = parse(body).extract[Ping]
+              ping
+            }
+          }
+        } ~
+        path("echo") {
+          entity(as[String]) { body =>
+            handleRequest {
+              val echo = parse(body).extract[Echo]
+              echo
+            }
           }
         }
       }
     }
+
   }
 
   def handleRequest(message : DomainMessage): Route = {
     val uuid = getLastId.toString
     ctx => perRequest(ctx, Props(new PingEchoActor(uuid)), message, Some(uuid))
+  }
+
+  def handleLocalRequest(message : DomainMessage): Route = {
+    val uuid = getLastId.toString
+    ctx => perRequest(ctx, Props(new LocalPingEchoActor()), message, None)
   }
 
   def getLastId : Long = {

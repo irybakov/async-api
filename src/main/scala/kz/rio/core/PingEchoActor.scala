@@ -18,12 +18,12 @@ class PingEchoActor(uuid: String) extends AsyncServiceActor {
   def receive = {
     case p @ Ping(ping) => {
       log.debug("PingEchoActor got Ping: {}",p)
-      publishAndWaitForReplay(p)
+      publishAndWaitForReply(p)
       context.become(waitingResponses)
     }
     case e @ Echo(echo) => {
       log.debug("PingEchoActor got Echo: {}",e)
-      publishAndWaitForReplay(e)
+      publishAndWaitForReply(e)
       context.become(waitingResponses)
     }
 
@@ -35,7 +35,7 @@ class PingEchoActor(uuid: String) extends AsyncServiceActor {
    * Publish request and change behavior for "waitingResponse"
    * @param domainMessage
    */
-  def publishAndWaitForReplay(domainMessage: DomainMessage) = {
+  def publishAndWaitForReply(domainMessage: DomainMessage) = {
     amqpPublisher ! RequestPublisherActor.PublishToQueue(uuid,domainMessage)
   }
 

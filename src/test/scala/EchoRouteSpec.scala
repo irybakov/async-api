@@ -17,23 +17,45 @@ class EchoRouteSpec extends FlatSpec with ScalatestRouteTest with Matchers {
 
   def restRouting = TestActorRef(new RestRouting() {
 
-    override def handleRequest(message : DomainMessage): Route =
+    override def handleRequest(message: DomainMessage): Route = {
       ctx => perRequest(ctx, echoService.ref, message)
+    }
+
+    override def handleLocalRequest(message: DomainMessage): Route = {
+      ctx => perRequest(ctx, echoService.ref, message)
+    }
   })
 
-  "Post to RestRouting" should " return echo json" in {
-    val postEcho = Post("/echo",
+  "Post to Container RestRouting" should " return echo json" in {
+    val postEcho = Post("/container/echo",
       HttpEntity(
           MediaTypes.`application/json`,
-          """{"echo":"test"}"""
+          """{"echo":"container"}"""
       )
     ) ~> restRouting.underlyingActor.route
 
-    echoService.expectMsg(Echo("test"))
-    echoService.reply(Echo("test echo"))
+    echoService.expectMsg(Echo("container"))
+    echoService.reply(Echo("container echo"))
 
     postEcho ~> check {
-      responseAs[String] should equal("""{"echo":"test echo"}""")
+      responseAs[String] should equal("""{"echo":"container echo"}""")
     }
   }
+
+  "Post to API RestRouting" should " return echo json" in {
+    val postEcho = Post("/api/echo",
+      HttpEntity(
+        MediaTypes.`application/json`,
+        """{"echo":"api"}"""
+      )
+    ) ~> restRouting.underlyingActor.route
+
+    echoService.expectMsg(Echo("api"))
+    echoService.reply(Echo("api echo"))
+
+    postEcho ~> check {
+      responseAs[String] should equal("""{"echo":"api echo"}""")
+    }
+  }
+
 }
