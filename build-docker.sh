@@ -7,6 +7,6 @@ sbt dist
 
 # build docker
 docker build -t async-api .
-docker tag async-api:latest irybakov/async-api
+docker tag -f async-api:latest irybakov/async-api
 docker push irybakov/async-api
 

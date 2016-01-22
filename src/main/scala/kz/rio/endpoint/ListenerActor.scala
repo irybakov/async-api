@@ -22,7 +22,8 @@ class ListenerActor(amqpConnection: ActorRef, replyTo: String) extends Actor wit
   implicit val formats = Serialization.formats(ShortTypeHints(List(classOf[Pong],classOf[Echo])))
 
   // create a consumer that will route incoming AMQP messages to our listener
-  val queueParams = QueueParameters(replyTo, passive = false, durable = false, exclusive = false, autodelete = false)
+  val  args = Map("x-message-ttl" -> Int.box(500))
+  val queueParams = QueueParameters(replyTo, passive = false, durable = false, exclusive = false, autodelete = false, args)
   val consumer = ConnectionOwner.createChildActor(amqpConnection, Consumer.props(Some(self)))
 
   // wait till everyone is actually connected to the broker
