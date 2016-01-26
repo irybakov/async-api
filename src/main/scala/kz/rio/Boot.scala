@@ -42,13 +42,10 @@ object Boot extends App {
     // create an AMQP connection
     val connFactory = new ConnectionFactory()
 
-
     val host = config.getString("amqp.host")
     val port = config.getInt("amqp.port")
     val user = config.getString("amqp.user")
     val password = config.getString("amqp.password")
-
-
 
     connFactory.setHost(host)
     connFactory.setPort(5672)
