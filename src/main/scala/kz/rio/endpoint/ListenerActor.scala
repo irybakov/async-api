@@ -3,7 +3,7 @@ package kz.rio.endpoint
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.github.sstone.amqp.Amqp._
 import com.github.sstone.amqp.{Amqp, ConnectionOwner, Consumer}
-import kz.rio.{DomainMessage, Pong, Echo}
+import kz.rio.{Endpoint, DomainMessage, Pong, Echo}
 import org.json4s._
 import org.json4s.native.JsonMethods._
 import org.json4s.native.Serialization
@@ -12,10 +12,10 @@ import org.json4s.native.Serialization
  * Created by irybakov on 1/12/16.
  */
 object ListenerActor {
-  def props(amqpConnection: ActorRef,replyTo: String): Props =  Props(classOf[ListenerActor],amqpConnection,replyTo)
+  def props(amqpConnection: ActorRef,endpoint: Endpoint, inboundGate: String): Props =  Props(classOf[ListenerActor],amqpConnection,endpoint,inboundGate)
 }
 
-class ListenerActor(amqpConnection: ActorRef, replyTo: String) extends Actor with ActorLogging {
+class ListenerActor(amqpConnection: ActorRef, endpoint: Endpoint, inboundGate: String) extends Actor with ActorLogging {
 
   import context._
 
@@ -23,7 +23,8 @@ class ListenerActor(amqpConnection: ActorRef, replyTo: String) extends Actor wit
 
   // create a consumer that will route incoming AMQP messages to our listener
   val  args = Map("x-message-ttl" -> Int.box(500))
-  val queueParams = QueueParameters(replyTo, passive = false, durable = false, exclusive = false, autodelete = false, args)
+
+  val queueParams = QueueParameters(endpoint.queue, passive = false, durable = false, exclusive = false, autodelete = true, args)
   val consumer = ConnectionOwner.createChildActor(amqpConnection, Consumer.props(Some(self)))
 
   // wait till everyone is actually connected to the broker
@@ -32,7 +33,8 @@ class ListenerActor(amqpConnection: ActorRef, replyTo: String) extends Actor wit
 
   consumer ! DeclareQueue(queueParams)
 
-  consumer ! QueueBind(queue = replyTo, exchange = "amq.topic", routing_key = replyTo)
+  val replyTo = endpoint.instanceEndpoint
+  consumer ! QueueBind(queue = endpoint.queue, exchange = inboundGate, routing_key = s"response.*.*:$replyTo")
 
   // tell our consumer to consume from it
   consumer ! AddQueue(queueParams)

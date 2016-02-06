@@ -19,15 +19,18 @@ object Boot extends App {
   private val config =  ConfigFactory.load()
 
   val amqpConnection = getAmqpConnection(config)
-  val apiId = config.getString("api.instance.id")
-  println(apiId)
-  val replyTo =s"$apiId.reply.queue"
+
+  val gateway = config.getConfig("ecosystem.gateway")
+  val endpoint = loadEndpoint(config.getConfig("ecosystem.endpoint"))
+
+  val inboundGate =  gateway.getString("inbound")
+  val outboundGate = gateway.getString("outbound")
 
   // Create amqp publisher Actor. We will access it via selector
-  system.actorOf(RequestPublisherActor.props(amqpConnection,replyTo),name = "amqpPublisher")
+  system.actorOf(RequestPublisherActor.props(amqpConnection,endpoint, outboundGate),name = "amqpPublisher")
 
   // This Actor will listen for response
-  system.actorOf(ListenerActor.props(amqpConnection,replyTo),name = "amqpListener")
+  system.actorOf(ListenerActor.props(amqpConnection,endpoint,inboundGate),name = "amqpListener")
 
   system.registerOnTermination {
     system.log.info("Actor per request demo shutdown.")
@@ -37,6 +40,21 @@ object Boot extends App {
 
   IO(Http) ! Http.Bind(routingActor, "0.0.0.0", port = 8082)
 
+
+  def loadEndpoint(config: Config): Endpoint = {
+    val serviceConfig = config.getConfig("service")
+
+    val service = EcoService(
+          serviceConfig.getString("system"),
+          serviceConfig.getString("subSystem"),
+          serviceConfig.getString("microservice")
+    )
+
+    Endpoint(
+      config.getString("instanceId"),
+      service
+    )
+  }
 
   def getAmqpConnection(config: Config) = {
     // create an AMQP connection
