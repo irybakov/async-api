@@ -29,7 +29,7 @@ class RequestPublisherActor(amqpConnection: ActorRef,endpoint: Endpoint, outboun
   import context._
   implicit val formats = Serialization.formats(ShortTypeHints(List(classOf[Ping],classOf[Echo])))
 
-  val routeKeyTemplate = "request.proto.%:*.*.*.*"
+  val routeKeyTemplate = "request.stub.%"
 
   val producer = ConnectionOwner.createChildActor(amqpConnection, ChannelOwner.props())
 
@@ -37,8 +37,11 @@ class RequestPublisherActor(amqpConnection: ActorRef,endpoint: Endpoint, outboun
 
   //producer ! DeclareExchange(ExchangeParameters(name = endpoint.exchange, passive = false, exchangeType = "fanout", durable = false, autodelete = false))
 
+  val instanceEnd =endpoint.instanceEndpoint
+  val replyToTemplate = s"$instanceEnd.response.stub.%"
+
   override def receive: Receive = {
-    case p @ PublishToQueue(correlationId,dm)  => publish(write[DomainMessage](p.dm),p.correlationId,endpoint.instanceEndpoint,outboundGate,routeKey(dm))
+    case p @ PublishToQueue(correlationId,dm)  => publish(write[DomainMessage](p.dm),p.correlationId,replyTo(dm),outboundGate,routeKey(dm))
   }
 
   def publish (body: String, correlationId: String, replyTo: String, exchange: String, routeKey: String)= {
@@ -51,6 +54,12 @@ class RequestPublisherActor(amqpConnection: ActorRef,endpoint: Endpoint, outboun
   def routeKey(dm: DomainMessage): String = dm match {
     case Ping(_) => routeKeyTemplate.replaceAll("%","ping")
     case Echo(_) => routeKeyTemplate.replaceAll("%","echo")
+    case _ => "undefined"
+  }
+
+  def replyTo(dm: DomainMessage): String = dm match {
+    case Ping(_) => replyToTemplate.replaceAll("%","ping")
+    case Echo(_) => replyToTemplate.replaceAll("%","echo")
     case _ => "undefined"
   }
 

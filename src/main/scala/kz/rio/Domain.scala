@@ -17,14 +17,14 @@ case object BagRequestException extends Exception("This is Bad Request, Man")
 // Rabbit routing
 case class EcoService(system: String,subSystem: String, microService: String) extends DomainMessage {
 
-  def serviceEndpoint = s"$microService.$subSystem.$system"
+  def serviceEndpoint = s"$microService-$subSystem-$system"
 }
 
 case class Endpoint(instanceId: String, ecoService: EcoService) extends DomainMessage {
 
   val serviceEndpoint = ecoService.serviceEndpoint
 
-  val instanceEndpoint = s"$instanceId.$serviceEndpoint"
+  val instanceEndpoint = s"$instanceId-$serviceEndpoint"
 
   def queue = s"Q:$instanceEndpoint"
 
