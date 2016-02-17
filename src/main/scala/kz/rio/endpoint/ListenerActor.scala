@@ -34,7 +34,7 @@ class ListenerActor(amqpConnection: ActorRef, endpoint: Endpoint, inboundGate: S
   consumer ! DeclareQueue(queueParams)
 
   val replyTo = endpoint.instanceEndpoint
-  consumer ! QueueBind(queue = endpoint.queue, exchange = inboundGate, routing_key = s"$replyTo.response.stub.*")
+  consumer ! QueueBind(queue = endpoint.queue, exchange = inboundGate, routing_key = s"$replyTo.response.api.*")
   //consumer ! QueueBind(queue = endpoint.queue, exchange = inboundGate, routing_key = s"response.stub.echo@$replyTo")
 
   // tell our consumer to consume from it

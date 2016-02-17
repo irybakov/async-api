@@ -38,7 +38,7 @@ class RequestPublisherActor(amqpConnection: ActorRef,endpoint: Endpoint, outboun
   //producer ! DeclareExchange(ExchangeParameters(name = endpoint.exchange, passive = false, exchangeType = "fanout", durable = false, autodelete = false))
 
   val instanceEnd =endpoint.instanceEndpoint
-  val replyToTemplate = s"$instanceEnd.response.stub.%"
+  val replyToTemplate = s"$instanceEnd.response.api.%"
 
   override def receive: Receive = {
     case p @ PublishToQueue(correlationId,dm)  => publish(write[DomainMessage](p.dm),p.correlationId,replyTo(dm),outboundGate,routeKey(dm))
