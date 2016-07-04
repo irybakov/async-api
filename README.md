@@ -1,6 +1,7 @@
 # async-api
 
 [![Build Status](https://snap-ci.com/irybakov/async-api/branch/master/build_image)](https://snap-ci.com/irybakov/async-api/branch/master)
+[![Coverage Status](https://coveralls.io/repos/github/irybakov/async-api/badge.svg?branch=master)](https://coveralls.io/github/irybakov/async-api?branch=master)
 
 
 
